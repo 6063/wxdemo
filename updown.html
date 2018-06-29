@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>上拉刷新和下拉加载</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<!-- js逻辑 -->
+<script>  
+    // this.getData是获取数据的方法，wx.request
+    var app = getApp()
+    Page({
+        data: {
+            feed: [],
+            feed_length: 0,
+            start:0,
+            end:0,
+            staticNum:4
+        },
+        onLoad: function () {
+            console.log('onLoad')
+            var that = this
+            //调用应用实例的方法获取全局数据
+            this.getData();
+        },
+        // 上拉刷新
+        upper: function () {
+            wx.showNavigationBarLoading()
+            this.refresh();
+            console.log("upper");
+            setTimeout(function () {
+                wx.hideNavigationBarLoading();
+                wx.stopPullDownRefresh();
+            }, 2000);
+        },
+        // 下拉加载
+        lower: function (e) {
+            wx.showNavigationBarLoading();
+            var that = this;
+            setTimeout(function () {
+                wx.hideNavigationBarLoading();
+                that.nextLoad();
+            }, 1000);
+            console.log("lower")
+        },
+        //网络请求数据, 实现首页刷新
+        refresh0: function () {
+            var index_api = '';
+            util.getData(index_api)
+                .then(function (data) {
+                    //this.setData({
+                    //
+                    //});
+                    console.log(data);
+                });
+        },
+        //使用本地 fake 数据实现刷新效果
+        getData: function () {
+            var feed = util.getData2();
+            console.log("loaddata");
+            var feed_data = feed.data;
+            this.setData({
+                feed: feed_data,
+                feed_length: feed_data.length
+            });
+        },
+        refresh: function () {
+            wx.showToast({
+                title: '刷新中',
+                icon: 'loading',
+                duration: 3000
+            });
+            setTimeout(function () {
+                wx.showToast({
+                    title: '刷新成功',
+                    icon: 'success',
+                    duration: 2000
+                })
+            }, 3000)
+
+            // 这里就调用获取数据的函数，取出的是所有的数据，然后只截取
+            // 其中的几条数据显示在页面上并赋值给feed_data
+            // const getBanner = (parmas) => { wxRequst(parmas, baseUrl + 'api/public/v1/home/swiperdata') };
+            //这里面 写一个通用的获取数据的函数
+            //const wxRequst = (params, url) => {
+            // wx.showToast({
+            //     title: '加载中...',
+            //     icon: 'loading'
+            // });
+            // wx.request({
+            //     url: url,
+            //     method: params.method || 'GET',
+            //     data: params.data || {},
+            //     header: {
+            //     'Content-Type': 'application/json'
+            //     },
+            //     success: (resp) => {
+            //     params.success && params.success(resp)
+            //     wx.hideToast()
+            //     },
+            //     fail: (resp) => {
+            //     params.fail && params.fail(resp)
+            //     },
+            //     complete: (resp) => {
+            //     params.complete && params.complete(resp)
+            //     }
+            // })
+            // }
+            // ---------------------------
+            // 调用这个函数就可以获取到一个返回的数据，下面用的是wepy对数据进行操作
+            // 把处理数据的函数封装在api.js中，在所需要页面引入即可 
+            // 如：import api from '../../src/api/api.js'
+            //   getBannerInfo() {
+            //     api.getBanner({
+            //       success: resp => {
+            //         // console.log(resp.data);
+            //         this.bannerImgArr = resp.data.message
+            //         this.$apply()
+            //       }
+            //     })
+            //   }
+            // this.bannerImgArr就获取到的是所有数据
+            // 假如每次取4条 设计一个变量为4，再设计start = 0;,
+            // feed.data = this.bannerImgAr.slice(start,start+4)
+            // end = start +4;
+            var feed_data = feed.data;
+            this.setData({
+                feed: feed_data,
+                feed_length: feed_data.length
+            });
+        },
+        //使用本地 fake 数据实现继续加载效果
+        nextLoad: function () {
+            wx.showToast({
+                title: '加载中',
+                icon: 'loading',
+                duration: 4000
+            })
+            setTimeout(function () {
+                wx.showToast({
+                    title: '加载成功',
+                    icon: 'success',
+                    duration: 2000
+                })
+            }, 3000)
+           
+            // start = end;
+            // 再继续切割数据
+            // next.data = this.bannerImgAr.slice(start,start+4)
+            // end = start + 4;           
+            // 需要做一个判断，如果end大于数组长度，那就取剩下的，然后所有数据都取完，那就显示没有更多数据
+            var next_data = next.data;
+            this.setData({
+                feed: this.data.feed.concat(next_data),
+                feed_length: this.data.feed_length + next_data.length
+            });
+
+        }
+
+
+    })
+
+</script>
+
